@@ -1,10 +1,17 @@
-import { useEffect } from "react";
-import socket from "./socket"
-import Canvas from "./Components/Canvas";
-import LandingPage from "./Components/LandingPage";
+import { useState, useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
 
+import socket from "./socket";
+
+import Canvas from "./Components/Canvas";
+import LandingPage from "./Components/LandingPage";
+import LobbyPage from "./Components/LobbyPage";
+import RoomPage from "./Components/RoomPage";
+import ResultsPage from "./Components/ResultsPage";
+
 function App() {
+  const [nickname, setNickname] = useState("");
+
   useEffect(() => {
     socket.on("connect", () => {
       console.log("Socket connected:", socket.id);
@@ -21,15 +28,41 @@ function App() {
   }, []);
 
   return (
-    <>
-        <main>
-          <h1>Hello Frontend</h1>
-          <Routes>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/canvas" element={<Canvas />} />
-          </Routes>
-        </main>
-    </>
+    <main className="app">
+      <Routes>
+        {}
+        <Route
+          path="/"
+          element={
+            <LandingPage
+              nickname={nickname}
+              setNickname={setNickname}
+            />
+          }
+        />
+
+        {}
+        <Route
+          path="/lobby"
+          element={<LobbyPage nickname={nickname} />}
+        />
+
+        <Route
+          path="/room"
+          element={<RoomPage nickname={nickname} />}
+        />
+
+        <Route
+          path="/canvas"
+          element={<Canvas nickname={nickname} />}
+        />
+
+        <Route
+          path="/results"
+          element={<ResultsPage nickname={nickname} />}
+        />
+      </Routes>
+    </main>
   );
 }
 
