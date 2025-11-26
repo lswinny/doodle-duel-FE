@@ -1,16 +1,18 @@
 import { useNavigate } from "react-router-dom";
+import socket from "../socket";
 
 function LandingPage({ nickname, setNickname }) {
   const navigate = useNavigate();
 
   function handleSubmit(event) {
-    event.preventDefault(); 
+    event.preventDefault();
 
     const trimmedName = nickname.trim();
-
     if (!trimmedName) {
       return;
     }
+
+    socket.emit("set-nickname", { nickname: trimmedName });
 
     navigate("/lobby");
   }
@@ -21,17 +23,13 @@ function LandingPage({ nickname, setNickname }) {
 
   return (
     <section className="screen landing-screen">
-      {}
       <header className="screen__header">
         <h1 className="screen__title">Doodle Duel</h1>
       </header>
 
-      {}
       <div className="screen__body">
-        {}
         <div className="avatar-circle" aria-hidden="true" />
 
-        {}
         <form className="nickname-form" onSubmit={handleSubmit}>
           <label className="nickname-form__label" htmlFor="nickname">
             Enter a nickname
