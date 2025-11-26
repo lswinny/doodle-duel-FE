@@ -6,6 +6,8 @@ function Canvas() {
 
     const [drawing, setDrawing] = useState(false);
     const [prev, setPrev] = useState(null);
+    const [predictedCategory, setPredictedCategory] = useState("");
+    const [strokes, setStrokes] = useState([]);
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -14,7 +16,7 @@ function Canvas() {
         const ctx = canvas.getContext("2d");
         ctx.lineWidth = 3;
         ctx.strokeStyle = "black";
-        ctx.linecap = "round";
+        ctx.lineCap = "round";
         
 
         ctxRef.current = ctx;
@@ -32,6 +34,7 @@ function Canvas() {
     function handleMouseDown(e){
         setDrawing(true);
         setPrev({x: e.nativeEvent.offsetX, y: e.nativeEvent.offsetY});
+        setStrokes(prev => [...prev, [{x: e.nativeEvent.offsetX, y: e.nativeEvent.offsetY}]]);
     }
 
     function handleMouseUp(){
@@ -47,10 +50,35 @@ function Canvas() {
 
         drawLine(prev.x, prev.y, x, y);
 
+        setStrokes(prev => {
+        const newStrokes = [...prev];
+        newStrokes[newStrokes.length - 1].push({x, y});
+        return newStrokes;
+        });
+
         setPrev({x,y});
     }
 
+    async function handleSubmit(){
+        const dataUrl = canvasRef.current.toDataURL("image/png");
+
+        try {
+            const response = await fetch("http://127.0.0.1:8000/api/submit", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({image: dataUrl, strokes})
+            });
+            const result = await response.json();
+            console.log(result)
+            setPredictedCategory(result.best_category);
+        }
+        catch(err){
+            console.error("Error submitting drawing:", err);
+        }
+    }
+
     return (
+        <>
         <canvas
         ref={canvasRef}
         style={{border: "1px solid black", background: "white"}}
@@ -58,6 +86,11 @@ function Canvas() {
         onMouseUp={handleMouseUp}
         onMouseMove={handleMouseMove}
         />
+        <div>
+        <button onClick={handleSubmit}>SUBMIT</button>
+        {predictedCategory && <p>Predicted Category: {predictedCategory}</p>}
+        </div>
+        </>
     );
 }
 
