@@ -16,6 +16,8 @@ function App() {
     return localStorage.getItem("authToken") || "";
   });
 
+  const [roomCode, setRoomCode] = useState("");
+
   useEffect(() => {
     socket.on("connect", () => {
       console.log("Socket connected:", socket.id);
@@ -60,12 +62,25 @@ function App() {
           }
         />
         <Route
-          path="/lobby"
-          element={<LobbyPage nickname={nickname} token={token} />}
+        path="/lobby"
+        element={
+          <LobbyPage
+            nickname={nickname}
+            token={token}
+            roomCode={roomCode}
+            setRoomCode={setRoomCode}
+          />
+        }
         />
         <Route
-          path="/room"
-          element={<RoomPage nickname={nickname} token={token} />}
+        path="/room"
+        element={
+          <RoomPage
+            nickname={nickname}
+            roomCode={roomCode}
+            token={token}
+          />
+        }
         />
         <Route
           path="/canvas"
