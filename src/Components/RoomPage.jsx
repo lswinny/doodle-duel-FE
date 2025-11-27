@@ -1,8 +1,29 @@
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import socket from "../socket";
 
 function RoomPage({ nickname, token }) {
   const navigate = useNavigate();
-  const {roomCode} = useParams();
+  const { roomCode } = useParams();
+  const [players, setPlayers] = useState({});
+  const [hostId, setHostId] = useState(null);
+
+  useEffect(() => {
+    socket.on("player-list", ({ players, hostId }) => {
+      setPlayers(players);
+      setHostId(hostId);
+    });
+
+    socket.on("roomClosed", ({ roomCode }) => {
+      alert(`Room ${roomCode} closed because the host left.`);
+      navigate("/lobby");
+    });
+
+    return () => {
+      socket.off("player-list");
+      socket.off("roomClosed");
+    };
+  }, [navigate]);
 
   function handleStartGame() {
     navigate("/canvas");
@@ -11,23 +32,22 @@ function RoomPage({ nickname, token }) {
   return (
     <section className="screen">
       <header className="screen__header">
-        <h1 className="screen__title">
-          Room {roomCode || "…"}
-        </h1>
+        <h1 className="screen__title">Room {roomCode || "…"}</h1>
       </header>
 
       <div className="screen__body">
-        <p>Players in this room (placeholder):</p>
+        <p>Players in this room:</p>
         <ul>
-          <li>{nickname || "You"} (Host)</li>
-          <li>Player 2</li>
-          <li>Player 3</li>
+          {Object.entries(players).map(([id, { nickname }]) => (
+            <li key={id}>
+              {nickname}
+              {id === socket.id ? " (You)" : ""}
+              {id === hostId ? " (Host)" : ""}
+            </li>
+          ))}
         </ul>
 
-        <button
-          className="primary-button"
-          onClick={handleStartGame}
-        >
+        <button className="primary-button" onClick={handleStartGame}>
           Start Game
         </button>
 
@@ -41,6 +61,5 @@ function RoomPage({ nickname, token }) {
     </section>
   );
 }
-
 
 export default RoomPage;

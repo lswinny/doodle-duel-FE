@@ -56,12 +56,6 @@ export default function LobbyPage({ nickname, token, rooms, setRooms }) {
           Create room
         </button>
 
-        {/* {roomCode && (
-          <p style={{ marginTop: "1rem" }}>
-            Current room code: <strong>{roomCode}</strong>
-          </p>
-        )} */}
-
         {safeRooms.length > 0 && (
   <div style={{ marginTop: "1rem" }}>
     <h2>Available Rooms</h2>
