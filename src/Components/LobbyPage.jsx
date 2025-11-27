@@ -6,6 +6,14 @@ export default function LobbyPage({ nickname, token, rooms, setRooms }) {
   const navigate = useNavigate();
 
   useEffect(() => {
+    socket.emit("lobby:join");
+
+    socket.emit("lobby:get-rooms");
+
+    function handleRoomsUpdated(data){
+      setRooms(data);
+    }
+
     function handleRoomCreated(data) {
       const newCode = typeof data === "string" ? data : data?.roomCode;
       if (!newCode) {
@@ -15,12 +23,14 @@ export default function LobbyPage({ nickname, token, rooms, setRooms }) {
       setRooms(prev => [...prev, newCode]);
     }
 
+    socket.on("lobby:rooms-updated", handleRoomsUpdated);
     socket.on("roomCreated", handleRoomCreated);
 
     return () => {
+      socket.off("lobby:rooms-updated", handleRoomsUpdated);
       socket.off("roomCreated", handleRoomCreated);
     };
-  }, [navigate, setRooms]);
+  }, [setRooms]);
 
   function handleCreateRoom() {
     if (!token) {
