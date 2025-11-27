@@ -4,6 +4,7 @@ import socket from "../socket";
 
 export default function LobbyPage({ nickname, token, rooms, setRooms }) {
   const navigate = useNavigate();
+  const safeRooms = Array.isArray(rooms) ? rooms : [];
 
   useEffect(() => {
     socket.emit("lobby:join");
@@ -11,7 +12,8 @@ export default function LobbyPage({ nickname, token, rooms, setRooms }) {
     socket.emit("lobby:get-rooms");
 
     function handleRoomsUpdated(data){
-      setRooms(data);
+      if (!Array.isArray(data)) return;
+      setRooms([...new Set(data)]);
     }
 
     function handleRoomCreated(data) {
@@ -20,7 +22,7 @@ export default function LobbyPage({ nickname, token, rooms, setRooms }) {
         console.warn("roomCreated event received without a room code:", data);
         return;
       }
-      setRooms(prev => [...prev, newCode]);
+      setRooms(prev => Array.from(new Set([...prev || [], newCode])));
     }
 
     socket.on("lobby:rooms-updated", handleRoomsUpdated);
@@ -60,7 +62,7 @@ export default function LobbyPage({ nickname, token, rooms, setRooms }) {
           </p>
         )} */}
 
-        {rooms.length > 0 && (
+        {safeRooms.length > 0 && (
   <div style={{ marginTop: "1rem" }}>
     <h2>Available Rooms</h2>
     {rooms.map(code => (
