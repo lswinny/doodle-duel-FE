@@ -2,21 +2,17 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import socket from "../socket";
 
-export default function LobbyPage({ nickname, token, roomCode, setRoomCode }) {
+export default function LobbyPage({ nickname, token, rooms, setRooms }) {
   const navigate = useNavigate();
 
   useEffect(() => {
     function handleRoomCreated(data) {
       const newCode = typeof data === "string" ? data : data?.roomCode;
-
       if (!newCode) {
         console.warn("roomCreated event received without a room code:", data);
         return;
       }
-
-      console.log("Room created with code:", newCode);
-      setRoomCode(newCode);  
-      navigate("/room");       
+      setRooms(prev => [...prev, newCode]);
     }
 
     socket.on("roomCreated", handleRoomCreated);
@@ -24,7 +20,7 @@ export default function LobbyPage({ nickname, token, roomCode, setRoomCode }) {
     return () => {
       socket.off("roomCreated", handleRoomCreated);
     };
-  }, [navigate, setRoomCode]);
+  }, [navigate, setRooms]);
 
   function handleCreateRoom() {
     if (!token) {
@@ -48,11 +44,26 @@ export default function LobbyPage({ nickname, token, roomCode, setRoomCode }) {
           Create room
         </button>
 
-        {roomCode && (
+        {/* {roomCode && (
           <p style={{ marginTop: "1rem" }}>
             Current room code: <strong>{roomCode}</strong>
           </p>
-        )}
+        )} */}
+
+        {rooms.length > 0 && (
+  <div style={{ marginTop: "1rem" }}>
+    <h2>Available Rooms</h2>
+    {rooms.map(code => (
+      <button
+        key={code}
+        className="secondary-button"
+        onClick={() => navigate(`/room/${code}`)}
+      >
+        Join room {code}
+      </button>
+    ))}
+  </div>
+)}
       </div>
     </section>
   );

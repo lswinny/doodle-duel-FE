@@ -1,7 +1,8 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
-function RoomPage({ nickname, roomCode }) {
+function RoomPage({ nickname, token }) {
   const navigate = useNavigate();
+  const {roomCode} = useParams();
 
   function handleStartGame() {
     navigate("/canvas");

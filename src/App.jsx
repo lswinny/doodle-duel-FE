@@ -17,6 +17,7 @@ function App() {
   });
 
   const [roomCode, setRoomCode] = useState("");
+  const [rooms, setRooms] = useState([]);
 
   useEffect(() => {
     socket.on("connect", () => {
@@ -67,17 +68,18 @@ function App() {
           <LobbyPage
             nickname={nickname}
             token={token}
+            rooms={rooms}
+            setRooms={setRooms}
             roomCode={roomCode}
             setRoomCode={setRoomCode}
           />
         }
         />
         <Route
-        path="/room"
+        path="/room/:roomCode"
         element={
           <RoomPage
             nickname={nickname}
-            roomCode={roomCode}
             token={token}
           />
         }
