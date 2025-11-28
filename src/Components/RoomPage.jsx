@@ -40,9 +40,9 @@ function RoomPage({ nickname, token }) {
         <ul>
           {Object.entries(players).map(([id, { nickname }]) => (
             <li key={id}>
-              {nickname}
-              {id === socket.id ? " (You)" : ""}
-              {id === hostId ? " (Host)" : ""}
+              Nickname: {nickname}
+              Socket ID: {id === socket.id ? " (You)" : ""}
+              Host ID: {id === hostId ? " (Host)" : ""}
             </li>
           ))}
         </ul>
