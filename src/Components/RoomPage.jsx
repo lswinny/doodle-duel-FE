@@ -11,10 +11,10 @@ function RoomPage({ nickname, token }) {
   const room = location.state?.room;
 
   useEffect(() => {
-    socket.emit('join-room', ({roomCode, nickname, token}))
-    socket.on("player-list", ({ players, hostId }) => {
-      setPlayers(players);
-      setHostId(hostId);
+    socket.emit('join-room', {roomCode, nickname, token})
+    socket.on("room:data", (roomInfo) => {
+      setPlayers(roomInfo.players);
+      setHostId(roomInfo.host);
     });
 
     socket.on("roomClosed", ({ roomCode }) => {
@@ -23,13 +23,13 @@ function RoomPage({ nickname, token }) {
     });
 
     return () => {
-      socket.off("player-list");
+      socket.off("room:data");
       socket.off("roomClosed");
     };
-  }, [navigate]);
+  }, []);
 
   console.log("Room code:", roomCode);
-  console.log("Room data:", room);
+  //console.log("Host ID:", room.host);
 
   function handleStartGame() {
     navigate("/canvas");
@@ -46,9 +46,9 @@ function RoomPage({ nickname, token }) {
         <ul>
           {Object.entries(players).map(([id, { nickname }]) => (
             <li key={id}>
-              Nickname: {nickname}
-              Socket ID: {id === socket.id ? " (You)" : ""}
-              Host ID: {id === hostId ? " (Host)" : ""}
+              Player: {nickname}
+              {id === socket.id ? " (You)" : ""}
+              {id === hostId ? " (Host)" : ""}
             </li>
           ))}
         </ul>

@@ -17,6 +17,7 @@ export default function LobbyPage({ nickname, token, rooms, setRooms }) {
     }
 
     function handleRoomCreated(code, data) {
+      console.log(data)
       const newCode = typeof code === "string" ? code : code?.roomCode;
       if (!newCode) {
         console.warn("roomCreated event received without a room code:", code);
