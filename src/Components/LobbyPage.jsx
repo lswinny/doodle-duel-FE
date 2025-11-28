@@ -9,20 +9,22 @@ export default function LobbyPage({ nickname, token, rooms, setRooms }) {
   useEffect(() => {
     socket.emit("lobby:join");
 
-    socket.emit("lobby:get-rooms");
+    //socket.emit("lobby:get-rooms");
 
     function handleRoomsUpdated(data){
       if (!Array.isArray(data)) return;
       setRooms([...new Set(data)]);
     }
 
-    function handleRoomCreated(data) {
-      const newCode = typeof data === "string" ? data : data?.roomCode;
+    function handleRoomCreated(code, data) {
+      const newCode = typeof code === "string" ? code : code?.roomCode;
       if (!newCode) {
-        console.warn("roomCreated event received without a room code:", data);
+        console.warn("roomCreated event received without a room code:", code);
         return;
       }
       setRooms(prev => Array.from(new Set([...prev || [], newCode])));
+
+      navigate(`/room/${code}`, {state: {room: data}});
     }
 
     socket.on("lobby:rooms-updated", handleRoomsUpdated);
@@ -63,7 +65,7 @@ export default function LobbyPage({ nickname, token, rooms, setRooms }) {
       <button
         key={code}
         className="secondary-button"
-        onClick={() => navigate(`/room/${code}`)}
+        onClick={() => { navigate(`/room/${code}`)}}
       >
         Join room {code}
       </button>

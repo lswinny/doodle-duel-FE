@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import socket from "../socket";
 
 function RoomPage({ nickname, token }) {
@@ -7,8 +7,11 @@ function RoomPage({ nickname, token }) {
   const { roomCode } = useParams();
   const [players, setPlayers] = useState({});
   const [hostId, setHostId] = useState(null);
+  const location = useLocation();
+  const room = location.state?.room;
 
   useEffect(() => {
+    socket.emit('join-room', ({roomCode, nickname, token}))
     socket.on("player-list", ({ players, hostId }) => {
       setPlayers(players);
       setHostId(hostId);
@@ -25,10 +28,13 @@ function RoomPage({ nickname, token }) {
     };
   }, [navigate]);
 
+  console.log("Room code:", roomCode);
+  console.log("Room data:", room);
+
   function handleStartGame() {
     navigate("/canvas");
   }
-
+  console.log({players})
   return (
     <section className="screen">
       <header className="screen__header">
