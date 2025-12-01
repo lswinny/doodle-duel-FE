@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import socket from "../socket";
 
 function RoomPage({ nickname, token }) {
@@ -7,8 +7,6 @@ function RoomPage({ nickname, token }) {
   const { roomCode } = useParams();
   const [players, setPlayers] = useState({});
   const [hostId, setHostId] = useState(null);
-  const location = useLocation();
-  const room = location.state?.room;
 
   useEffect(() => {
     socket.emit('join-room', {roomCode, nickname, token})
@@ -22,9 +20,14 @@ function RoomPage({ nickname, token }) {
       navigate("/lobby");
     });
 
+    socket.on("game-started", ({roomCode, roomData}) => {
+      navigate(`/canvas/${roomCode}`, {state: {room: roomData}})
+    })
+
     return () => {
       socket.off("room:data");
       socket.off("roomClosed");
+      socket.off("game-started")
     };
   }, []);
 
@@ -36,6 +39,7 @@ function RoomPage({ nickname, token }) {
       state: { roomCode },
     });
   }
+
   console.log({players})
   return (
     <section className="screen">
@@ -55,9 +59,14 @@ function RoomPage({ nickname, token }) {
           ))}
         </ul>
 
-        <button className="primary-button" onClick={handleStartGame}>
+        <button className="primary-button" onClick={() => socket.emit("start-game", {
+          roomCode, token
+        })}
+          disabled={socket.id !== hostId}>
           Start Game
         </button>
+
+        {socket.id !== hostId && <p>Waiting for host to start the game...</p>}
 
         {roomCode && (
           <p style={{ marginTop: "1rem" }}>
