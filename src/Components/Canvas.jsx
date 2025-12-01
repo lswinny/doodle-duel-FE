@@ -1,8 +1,9 @@
 import { useRef, useEffect, useState } from "react";
+
 import { useLocation, useParams, useNavigate } from "react-router-dom";
 import socket from "../socket";
 
-function Canvas() {
+function Canvas({ nickname, token }) {
     const canvasRef = useRef(null);
     const ctxRef = useRef(null);
     const location = useLocation();
@@ -13,6 +14,14 @@ function Canvas() {
 
     const [drawing, setDrawing] = useState(false);
     const [prev, setPrev] = useState(null);
+
+    // added in this branch: basic UI state for upload
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
+
+  // added in this branch: Get roomCode from navigation state
+  const location = useLocation();
+  const roomCode = location.state?.roomCode || "";
 
     useEffect(() => {
         if (room) return;
@@ -58,6 +67,8 @@ function Canvas() {
 
     function drawLine(x1, y1, x2, y2, color = "black"){
         const ctx = ctxRef.current;
+        if (!ctx) return;
+
         ctx.strokeStyle = color;
         ctx.beginPath();
         ctx.moveTo(x1, y1);
@@ -86,15 +97,114 @@ function Canvas() {
         setPrev({x,y});
     }
 
-    return (
-        <canvas
-        ref={canvasRef}
-        style={{border: "1px solid black", background: "white"}}
-        onMouseDown={handleMouseDown}
-        onMouseUp={handleMouseUp}
-        onMouseMove={handleMouseMove}
-        />
-    );
+    function canvasToPngBlob(canvas) {
+        return new Promise((resolve, reject) => {
+          canvas.toBlob(
+            (blob) => {
+              if (!blob) {
+                reject(new Error("Canvas.toBlob returned null"));
+              } else {
+                resolve(blob);
+              }
+            },
+            "image/png", // mime type
+            0.92         // quality (ignored for PNG but fine to leave)
+          );
+        });
+      }
+    
+      // NEW: submitting drawing to Express server ----
+      async function handleSubmitDrawing() {
+        setError("");
+    
+        const canvas = canvasRef.current;
+        if (!canvas) {
+          setError("Canvas is not ready yet.");
+          return;
+        }
+    
+        if (!roomCode) {
+          // we *can* relax this later if anybody want,
+          // but for now it's helpful feedback.
+          setError("No room code available – cannot submit drawing.");
+          return;
+        }
+    
+        setIsSubmitting(true);
+    
+        try {
+          // Turning canvas contents into a PNG blob
+          const pngBlob = await canvasToPngBlob(canvas);
+    
+          // Building form data to send to Express
+          const formData = new FormData();
+          formData.append("image", pngBlob, "drawing.png");
+          formData.append("roomCode", roomCode);
+          if (token) formData.append("token", token);
+          if (nickname) formData.append("nickname", nickname);
+    
+          // POST to Express API
+          //  have to  Adjust URL if our backend uses another path.
+          const res = await fetch("http://localhost:3000/api/drawings", {
+            method: "POST",
+            body: formData,
+          });
+    
+          if (!res.ok) {
+            const text = await res.text();
+            throw new Error(`Upload failed: ${res.status} ${text}`);
+          }
+    
+          const data = await res.json().catch(() => null);
+          console.log("Drawing uploaded successfully:", data);
+    
+          // Here we could navigate to a "waiting for results" screen
+          // or just show a success message.
+          // e.g. alert("Drawing submitted!");
+        } catch (err) {
+          console.error(err);
+          setError(err.message || "Something went wrong while submitting.");
+        } finally {
+          setIsSubmitting(false);
+        }
+      }
+    
+      return (
+        <section className="screen">
+          <header className="screen__header">
+            <h1 className="screen__title">Canvas</h1>
+            {roomCode && <p>Room: {roomCode}</p>}
+          </header>
+    
+          <div className="screen__body">
+            <canvas
+              ref={canvasRef}
+              style={{ border: "1px solid black", background: "white" }}
+              onMouseDown={handleMouseDown}
+              onMouseUp={handleMouseUp}
+              onMouseMove={handleMouseMove}
+            />
+    
+            {/* NEW: Submit button + status */}
+            <div style={{ marginTop: "1rem" }}>
+              <button
+                type="button"
+                onClick={handleSubmitDrawing}
+                disabled={isSubmitting}
+                className="primary-button"
+              >
+                {isSubmitting ? "Sending drawing..." : "Submit drawing"}
+              </button>
+    
+              {error && (
+                <p style={{ color: "red", marginTop: "0.5rem" }}>
+                  {error}
+                </p>
+              )}
+            </div>
+          </div>
+        </section>
+      );
 }
 
 export default Canvas;

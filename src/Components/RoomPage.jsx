@@ -34,6 +34,12 @@ function RoomPage({ nickname, token }) {
   console.log("Room code:", roomCode);
   //console.log("Host ID:", room.host);
 
+  function handleStartGame() {
+    navigate("/canvas", {
+      state: { roomCode },
+    });
+  }
+
   console.log({players})
   return (
     <section className="screen">
