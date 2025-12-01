@@ -1,5 +1,6 @@
 import { useRef, useEffect, useState } from "react";
 
+
 import { useLocation, useParams, useNavigate } from "react-router-dom";
 import socket from "../socket";
 
@@ -14,7 +15,31 @@ function Canvas({ nickname, token }) {
 
     const [drawing, setDrawing] = useState(false);
     const [prev, setPrev] = useState(null);
+    const [timer, setTimer] = useState(30);
+    const [started, setStarted] = useState(false);
 
+
+  useEffect(() => {
+    if (!started || !canvasRef.current) return;
+    const canvas = canvasRef.current;
+    canvas.width = 800;
+    canvas.height = 500;
+    const ctx = canvas.getContext("2d");
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = "black";
+    ctx.linecap = "round";
+    ctxRef.current = ctx;
+  }, [started,room]);
+
+  useEffect(() => {
+    if (!started) return;
+    if (timer <= 0) {
+      console.log(
+        "Timer finished - replace this console.log with handleSubmit function invocation once function has been created"
+      );
+      return;
+    });
+      
     // added in this branch: basic UI state for upload
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -48,20 +73,6 @@ function Canvas({ nickname, token }) {
         return <p>Loading room...</p>
     }
 
-    useEffect(() => {
-        const canvas = canvasRef.current;
-        canvas.width = 800;
-        canvas.height = 500;
-        const ctx = canvas.getContext("2d");
-        ctx.lineWidth = 3;
-        ctx.strokeStyle = "black";
-        ctx.linecap = "round";
-        
-
-        ctxRef.current = ctx;
-    }, [room]);
-
-
     console.log("Players: ", room.players);
     console.log("Host: ", room.host);
 
@@ -74,28 +85,44 @@ function Canvas({ nickname, token }) {
         ctx.moveTo(x1, y1);
         ctx.lineTo(x2,y2);
         ctx.stroke();
+
     }
+    const timerId = setInterval(() => {
+      setTimer((prev) => {
+        if (prev <= 1) {
+          console.log("Timer finished");
+          clearInterval(timerId);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timerId);
+  }, [started, timer]);
 
-    function handleMouseDown(e){
-        setDrawing(true);
-        setPrev({x: e.nativeEvent.offsetX, y: e.nativeEvent.offsetY});
-    }
+  function handleMouseDown(e) {
+    setDrawing(true);
+    setPrev({ x: e.nativeEvent.offsetX, y: e.nativeEvent.offsetY });
+  }
 
-    function handleMouseUp(){
-        setDrawing(false);
-        setPrev(null);
-    }
+  function handleMouseUp() {
+    setDrawing(false);
+    setPrev(null);
+  }
 
-    function handleMouseMove(e){
-        if (!drawing) return;
+  function handleMouseMove(e) {
+    if (!drawing) return;
 
-        const x = e.nativeEvent.offsetX;
-        const y = e.nativeEvent.offsetY;
+    const x = e.nativeEvent.offsetX;
+    const y = e.nativeEvent.offsetY;
 
-        drawLine(prev.x, prev.y, x, y);
+    drawLine(prev.x, prev.y, x, y);
 
-        setPrev({x,y});
-    }
+    setPrev({ x, y });
+  }
+
+  //handleSubmit async function goes here... Sirat is looking into this
+
 
     function canvasToPngBlob(canvas) {
         return new Promise((resolve, reject) => {
@@ -170,40 +197,64 @@ function Canvas({ nickname, token }) {
       }
     
       return (
-        <section className="screen">
-          <header className="screen__header">
-            <h1 className="screen__title">Canvas</h1>
-            {roomCode && <p>Room: {roomCode}</p>}
-          </header>
-    
-          <div className="screen__body">
-            <canvas
-              ref={canvasRef}
-              style={{ border: "1px solid black", background: "white" }}
-              onMouseDown={handleMouseDown}
-              onMouseUp={handleMouseUp}
-              onMouseMove={handleMouseMove}
-            />
-    
-            {/* NEW: Submit button + status */}
-            <div style={{ marginTop: "1rem" }}>
-              <button
-                type="button"
-                onClick={handleSubmitDrawing}
-                disabled={isSubmitting}
-                className="primary-button"
-              >
-                {isSubmitting ? "Sending drawing..." : "Submit drawing"}
-              </button>
-    
-              {error && (
-                <p style={{ color: "red", marginTop: "0.5rem" }}>
-                  {error}
-                </p>
-              )}
-            </div>
+        <div>
+  {!started ? (
+    <button
+      onClick={() => {
+        setTimer(30);
+        setStarted(true);
+      }}
+    >
+      Begin Round
+    </button>
+  ) : (
+    <>
+      <section className="screen">
+        <header className="screen__header">
+          <h1 className="screen__title">Canvas</h1>
+          {roomCode && <p>Room: {roomCode}</p>}
+        </header>
+
+        <div className="screen__body">
+          {/* SINGLE CANVAS */}
+          <canvas
+            ref={canvasRef}
+            style={{
+              border: "1px solid black",
+              background: "white",
+              width: "800px",
+              height: "500px",
+            }}
+            onMouseDown={handleMouseDown}
+            onMouseUp={handleMouseUp}
+            onMouseMove={handleMouseMove}
+          />
+
+          {/* Submit button + status */}
+          <div style={{ marginTop: "1rem" }}>
+            <button
+              type="button"
+              onClick={handleSubmitDrawing}
+              disabled={isSubmitting}
+              className="primary-button"
+            >
+              {isSubmitting ? "Sending drawing..." : "Submit drawing"}
+            </button>
+
+            {error && (
+              <p style={{ color: "red", marginTop: "0.5rem" }}>
+                {error}
+              </p>
+            )}
           </div>
-        </section>
+        </div>
+      </section>
+
+      {/* Timer */}
+      <h3>⏳ Time left: {timer} seconds</h3>
+    </>
+  )}
+</div>
       );
 }
 
