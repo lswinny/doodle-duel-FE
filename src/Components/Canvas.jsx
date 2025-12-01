@@ -1,7 +1,6 @@
 import { useRef, useEffect, useState } from "react";
 import { useLocation, useParams, useNavigate } from "react-router-dom";
 import socket from "../socket";
-import { binaryToBase64 } from "../utils/binaryToBase64";
 
 function Canvas({ nickname, token }) {
   const canvasRef = useRef(null);
@@ -63,7 +62,7 @@ function Canvas({ nickname, token }) {
 
     if (timer <= 0) {
       console.log("Timer finished!");
-      // Later: you could auto-call handleSubmitDrawing() here if desired
+      // Later: call handleSubmitDrawing() here if needed
       return;
     }
 
@@ -131,7 +130,7 @@ function Canvas({ nickname, token }) {
     });
   }
 
-  // Submit drawing (canvas → blob → ArrayBuffer → Base64 → socket)
+  // Submit drawing
   async function handleSubmitDrawing() {
     setError("");
 
@@ -149,25 +148,26 @@ function Canvas({ nickname, token }) {
     setIsSubmitting(true);
 
     try {
-      // 1) Canvas -> PNG Blob (binary)
       const pngBlob = await canvasToPngBlob(canvas);
 
-      // 2) Blob -> ArrayBuffer
-      const arrayBuffer = await pngBlob.arrayBuffer();
+      const formData = new FormData();
+      formData.append("image", pngBlob, "drawing.png");
+      formData.append("roomCode", roomCode);
+      if (token) formData.append("token", token);
+      if (nickname) formData.append("nickname", nickname);
 
-      // 3) ArrayBuffer -> Base64 string
-      const base64 = binaryToBase64(arrayBuffer);
-
-      // 4) Emit over socket to backend
-      socket.emit("submit-drawing", {
-        roomCode,
-        imageData: base64, // pure Base64, backend converts/stores this safely
+      const res = await fetch("http://localhost:3000/api/drawings", {
+        method: "POST",
+        body: formData,
       });
 
-      console.log(
-        "Drawing submitted via socket.io. Base64 length:",
-        base64.length
-      );
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`Upload failed: ${res.status} ${text}`);
+      }
+
+      const data = await res.json().catch(() => null);
+      console.log("Drawing uploaded successfully:", data);
     } catch (err) {
       console.error(err);
       setError(err.message || "Something went wrong while submitting.");
