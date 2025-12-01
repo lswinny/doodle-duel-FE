@@ -10,20 +10,23 @@ function Canvas({ nickname, token }) {
   const { roomCode } = useParams();
 
   const [room, setRoom] = useState(location.state?.room || null);
-
+  const [mySocketId, setMySocketId] = useState(null);
   const [drawing, setDrawing] = useState(false);
   const [prev, setPrev] = useState(null);
   const [timer, setTimer] = useState(30);
   const [started, setStarted] = useState(false);
-
-  // NEW: submission UI state
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
 
-  // Load room data from socket
+useEffect(() => {
+  if (socket.connected) setMySocketId(socket.id);
+  const onConnect = () => setMySocketId(socket.id);
+  socket.on("connect", onConnect);
+  return () => socket.off("connect", onConnect);
+}, []);
+
   useEffect(() => {
     if (room) return;
-
     socket.emit("get-room-data", { roomCode });
 
     function handleRoomData(roomInfo) {
@@ -34,50 +37,38 @@ function Canvas({ nickname, token }) {
       }
       setRoom(roomInfo);
     }
-
     socket.on("room:data", handleRoomData);
-
     return () => socket.off("room:data", handleRoomData);
   }, [roomCode, navigate]);
 
-  // Initialize canvas when round starts
   useEffect(() => {
     if (!started || !canvasRef.current) return;
-
     const canvas = canvasRef.current;
     canvas.width = 800;
     canvas.height = 500;
-
     const ctx = canvas.getContext("2d");
     ctx.lineWidth = 3;
     ctx.strokeStyle = "black";
     ctx.lineCap = "round";
-
     ctxRef.current = ctx;
   }, [started]);
 
-  // Timer logic
+  //Replaced the previous timer useEffect with the below, now the backend will handle countdown (to fix sync issue)
   useEffect(() => {
-    if (!started) return;
-
-    if (timer <= 0) {
-      console.log("Timer finished!");
-      // Later: call handleSubmitDrawing() here if needed
-      return;
+    function handleRoundStart({ duration }) {
+      setStarted(true);
+      setTimer(duration);
     }
-
-    const timerId = setInterval(() => {
-      setTimer((prev) => {
-        if (prev <= 1) {
-          clearInterval(timerId);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timerId);
-  }, [started, timer]);
+    function handleCountdown({ timeLeft }) {
+      setTimer(timeLeft);
+    }
+    socket.on("round:start", handleRoundStart);
+    socket.on("round:countdown", handleCountdown);
+    return () => {
+      socket.off("round:start", handleRoundStart);
+      socket.off("round:countdown", handleCountdown);
+    };
+  }, []);
 
   if (!room) {
     return <p>Loading room...</p>;
@@ -179,16 +170,20 @@ function Canvas({ nickname, token }) {
   return (
     <div>
       {!started ? (
-        <button
-          onClick={() => {
-            setTimer(30);
-            setStarted(true);
-          }}
-        >
-          Begin Round
-        </button>
+        room.host === mySocketId ? (
+          <button
+            onClick={() => {
+              socket.emit("start-game", { roomCode, token, duration: 30 });
+            }}
+          >
+            Begin Round
+          </button>
+        ) : (
+          <p>Waiting for host to start the round…</p>
+        )
       ) : (
         <>
+          <h3>⏳ Time left: {timer} seconds</h3>
           <section className="screen">
             <header className="screen__header">
               <h1 className="screen__title">Canvas</h1>
@@ -225,8 +220,6 @@ function Canvas({ nickname, token }) {
               </div>
             </div>
           </section>
-
-          <h3>⏳ Time left: {timer} seconds</h3>
         </>
       )}
     </div>
