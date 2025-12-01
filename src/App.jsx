@@ -89,7 +89,7 @@ function App() {
           element={<Canvas nickname={nickname} token={token} />}
         />
         <Route
-          path="/results"
+          path="/results/:roomCode"
           element={<ResultsPage nickname={nickname} token={token} />}
         />
       </Routes>

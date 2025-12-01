@@ -210,18 +210,20 @@ function Canvas({ nickname, token }) {
               />
 
               <div style={{ marginTop: "1rem" }}>
-                <button
-                  type="button"
-                  onClick={handleSubmitDrawing}
-                  disabled={isSubmitting}
-                  className="primary-button"
-                >
+                <button type="button" onClick={handleSubmitDrawing} disabled={isSubmitting} className="primary-button">
                   {isSubmitting ? "Sending drawing..." : "Submit drawing"}
                 </button>
 
-                {error && (
-                  <p style={{ color: "red", marginTop: "0.5rem" }}>{error}</p>
-                )}
+                {/* DEBUG NAVIGATION */}
+                <button
+                  onClick={() => navigate(`/results/${roomCode}`)}
+                  className="primary-button"
+                  style={{ marginLeft: "1rem" }}
+                >
+                  Go to Results (debug)
+                </button>
+
+                {error && <p style={{ color: "red", marginTop: "0.5rem" }}>{error}</p>}
               </div>
             </div>
           </section>
