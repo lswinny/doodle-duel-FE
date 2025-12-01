@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import socket from "../socket";
 
 function RoomPage({ nickname, token }) {
@@ -7,14 +7,12 @@ function RoomPage({ nickname, token }) {
   const { roomCode } = useParams();
   const [players, setPlayers] = useState({});
   const [hostId, setHostId] = useState(null);
-  const location = useLocation();
-  const room = location.state?.room;
 
   useEffect(() => {
-    socket.emit('join-room', ({roomCode, nickname, token}))
-    socket.on("player-list", ({ players, hostId }) => {
-      setPlayers(players);
-      setHostId(hostId);
+    socket.emit('join-room', {roomCode, nickname, token})
+    socket.on("room:data", (roomInfo) => {
+      setPlayers(roomInfo.players);
+      setHostId(roomInfo.host);
     });
 
     socket.on("roomClosed", ({ roomCode }) => {
@@ -22,18 +20,26 @@ function RoomPage({ nickname, token }) {
       navigate("/lobby");
     });
 
+    socket.on("game-started", ({roomCode, roomData}) => {
+      navigate(`/canvas/${roomCode}`, {state: {room: roomData}})
+    })
+
     return () => {
-      socket.off("player-list");
+      socket.off("room:data");
       socket.off("roomClosed");
+      socket.off("game-started")
     };
-  }, [navigate]);
+  }, []);
 
   console.log("Room code:", roomCode);
-  console.log("Room data:", room);
+  //console.log("Host ID:", room.host);
 
   function handleStartGame() {
-    navigate("/canvas");
+    navigate("/canvas", {
+      state: { roomCode },
+    });
   }
+
   console.log({players})
   return (
     <section className="screen">
@@ -46,16 +52,21 @@ function RoomPage({ nickname, token }) {
         <ul>
           {Object.entries(players).map(([id, { nickname }]) => (
             <li key={id}>
-              Nickname: {nickname}
-              Socket ID: {id === socket.id ? " (You)" : ""}
-              Host ID: {id === hostId ? " (Host)" : ""}
+              Player: {nickname}
+              {id === socket.id ? " (You)" : ""}
+              {id === hostId ? " (Host)" : ""}
             </li>
           ))}
         </ul>
 
-        <button className="primary-button" onClick={handleStartGame}>
+        <button className="primary-button" onClick={() => socket.emit("start-game", {
+          roomCode, token
+        })}
+          disabled={socket.id !== hostId}>
           Start Game
         </button>
+
+        {socket.id !== hostId && <p>Waiting for host to start the game...</p>}
 
         {roomCode && (
           <p style={{ marginTop: "1rem" }}>
