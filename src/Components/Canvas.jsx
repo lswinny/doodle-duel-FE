@@ -153,13 +153,14 @@ function Canvas({ nickname, token }) {
       const formData = new FormData();
       formData.append("image", pngBlob, "drawing.png");
       formData.append("roomCode", roomCode);
+      formData.append("socketId", socket.id);
       if (token) formData.append("token", token);
       if (nickname) formData.append("nickname", nickname);
 
-      const res = await fetch("http://localhost:3000/api/drawings", {
+      const res = await fetch("http://localhost:3000/upload", {
         method: "POST",
         body: formData,
-      });
+      });      
 
       if (!res.ok) {
         const text = await res.text();
