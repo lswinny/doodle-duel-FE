@@ -3,29 +3,52 @@
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  background: #f5f5f5; 
+  background: #7c38aa; 
   padding: 3rem 1rem;
   box-sizing: border-box;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
 }
 
+@font-face {
+  font-family: "DoodleNoodle";
+  src: url("./Assets/Fonts/ORGANICAL PERSONAL USE.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+  
+}
+
 .screen {
   width: 80vw;
   height: 80vh;
   background: white;
-  box-shadow: 0 0 0 1px #ddd;
+  /* box-shadow: 0 0 0 1px #ddd; */
 }
 
 .screen__header {
-  background: #e0e0e0;
+  background: #7c38aa;
   padding: 0.75rem 1.5rem;
+  text-align: center;
+  font-family: "DoodleNoodle";
 }
 
 .screen__title {
   margin: 0;
-  font-size: 1.4rem;
+  font-size: 5rem;
   font-weight: 600;
+  color: #ffd93b;
+}
+
+
+
+/* Outline / shadow layer */
+.screen__title::before {
+  content: attr(data-text);
+  position: absolute;
+  left: 4px;   /* horizontal offset */
+  top: 4px;    /* vertical offset */
+  color: #e69500; /* darker yellow / orange */
+  z-index: -1;
 }
 
 .screen__body {
@@ -149,4 +172,40 @@
   text-align: center;
   font-size: 1.3rem;
   font-weight: 600;
+}
+
+.nav-buttons{
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin-top: 3rem;
+}
+
+.nav-buttons button {
+  padding: 1rem 2rem;          /* bigger clickable area */
+  font-size: 1.2rem;           /* larger text */
+  border: none;
+  border-radius: 8px;          /* rounded corners */
+  background: #ffd93b;         /* yellow background */
+  color: #000000;              /* darker text for contrast */
+  cursor: pointer;
+  font-weight: bold;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.secondary-button {
+  padding: 1rem 2rem;          /* bigger clickable area */
+  font-size: 1.2rem;           /* larger text */
+  border: none;
+  border-radius: 8px;          /* rounded corners */
+  background: #ffd93b;         /* yellow background */
+  color: #000000;              /* darker text for contrast */
+  cursor: pointer;
+  font-weight: bold;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+button:hover {
+  transform: translateY(-2px);      /* subtle lift on hover */
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }
