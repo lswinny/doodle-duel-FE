@@ -20,12 +20,12 @@ function Canvas({ nickname, token }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
 
-useEffect(() => {
-  if (socket.connected) setMySocketId(socket.id);
-  const onConnect = () => setMySocketId(socket.id);
-  socket.on("connect", onConnect);
-  return () => socket.off("connect", onConnect);
-}, []);
+  useEffect(() => {
+    if (socket.connected) setMySocketId(socket.id);
+    const onConnect = () => setMySocketId(socket.id);
+    socket.on("connect", onConnect);
+    return () => socket.off("connect", onConnect);
+  }, []);
 
   useEffect(() => {
     if (room) return;
@@ -57,22 +57,39 @@ useEffect(() => {
 
   //Replaced the previous timer useEffect with the below, now the backend will handle countdown (to fix sync issue)
   useEffect(() => {
-    function handleRoundStart({ duration }) {
+    function handleRoundStart({ duration, prompt, category }) {
       setStarted(true);
       setTimer(duration);
       setPrompt(prompt);
       setCategory(category);
     }
-    function handleCountdown({ timeLeft }) {
-      setTimer(timeLeft);
-    }
     socket.on("round:start", handleRoundStart);
-    socket.on("round:countdown", handleCountdown);
     return () => {
       socket.off("round:start", handleRoundStart);
-      socket.off("round:countdown", handleCountdown);
     };
   }, []);
+
+  // Local countdown timer
+useEffect(() => {
+  if (!started) return;
+
+  if (timer <= 0) {
+    console.log("Timer finished!");
+    return;
+  }
+
+  const timerId = setInterval(() => {
+    setTimer(prev => {
+      if (prev <= 1) {
+        clearInterval(timerId);
+        return 0;
+      }
+      return prev - 1;
+    });
+  }, 1000);
+
+  return () => clearInterval(timerId);
+}, [started, timer]);
 
   if (!room) {
     return <p>Loading room...</p>;
@@ -196,13 +213,13 @@ useEffect(() => {
 
             <div className="screen__body">
               {prompt && (
-              <h2>
-                Prompt: {prompt}{" "}
-                {category && (
-                  <span style={{ fontStyle: "italic" }}>({category})</span>
-                )}
-              </h2>
-            )}
+                <h2>
+                  Prompt: {prompt}{" "}
+                  {category && (
+                    <span style={{ fontStyle: "italic" }}>({category})</span>
+                  )}
+                </h2>
+              )}
               <canvas
                 ref={canvasRef}
                 style={{
