@@ -11,6 +11,8 @@ function Canvas({ nickname, token }) {
 
   const [room, setRoom] = useState(location.state?.room || null);
   const [mySocketId, setMySocketId] = useState(null);
+  const [prompt, setPrompt] = useState("");
+  const [category, setCategory] = useState("");
   const [drawing, setDrawing] = useState(false);
   const [prev, setPrev] = useState(null);
   const [timer, setTimer] = useState(30);
@@ -58,6 +60,8 @@ useEffect(() => {
     function handleRoundStart({ duration }) {
       setStarted(true);
       setTimer(duration);
+      setPrompt(prompt);
+      setCategory(category);
     }
     function handleCountdown({ timeLeft }) {
       setTimer(timeLeft);
@@ -191,6 +195,14 @@ useEffect(() => {
             </header>
 
             <div className="screen__body">
+              {prompt && (
+              <h2>
+                Prompt: {prompt}{" "}
+                {category && (
+                  <span style={{ fontStyle: "italic" }}>({category})</span>
+                )}
+              </h2>
+            )}
               <canvas
                 ref={canvasRef}
                 style={{
