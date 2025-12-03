@@ -11,8 +11,8 @@ function Canvas({ nickname, token }) {
 
   const [room, setRoom] = useState(location.state?.room || null);
   const [mySocketId, setMySocketId] = useState(null);
+  const [preCountdown, setPreCountdown] = useState(null);
   const [prompt, setPrompt] = useState("");
-  const [category, setCategory] = useState("");
   const [drawing, setDrawing] = useState(false);
   const [prev, setPrev] = useState(null);
   const [timer, setTimer] = useState(30);
@@ -43,6 +43,21 @@ function Canvas({ nickname, token }) {
     return () => socket.off("room:data", handleRoomData);
   }, [roomCode, navigate]);
 
+
+function capitalizeFirstLetter(str) {
+  if (!str) return "";
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+    useEffect(() => {
+    function handlePreCountdown({ count, prompt }) {
+      setPrompt(capitalizeFirstLetter(prompt));
+      setPreCountdown(count);
+    }
+    socket.on("round:precountdown", handlePreCountdown);
+    return () => socket.off("round:precountdown", handlePreCountdown);
+  }, []);
+
   useEffect(() => {
     if (!started || !canvasRef.current) return;
     const canvas = canvasRef.current;
@@ -55,13 +70,12 @@ function Canvas({ nickname, token }) {
     ctxRef.current = ctx;
   }, [started]);
 
-  //Replaced the previous timer useEffect with the below, now the backend will handle countdown (to fix sync issue)
   useEffect(() => {
-    function handleRoundStart({ duration, prompt, category }) {
+    function handleRoundStart({ duration, prompt }) {
       setStarted(true);
       setTimer(duration);
-      setPrompt(prompt);
-      setCategory(category);
+      setPrompt(capitalizeFirstLetter(prompt));
+      setPreCountdown(null);
     }
     socket.on("round:start", handleRoundStart);
     return () => {
@@ -69,7 +83,7 @@ function Canvas({ nickname, token }) {
     };
   }, []);
 
-  // Local countdown timer
+
 useEffect(() => {
   if (!started) return;
 
@@ -190,19 +204,16 @@ useEffect(() => {
 
   return (
     <div>
-      {!started ? (
-        room.host === mySocketId ? (
-          <button
-            onClick={() => {
-              socket.emit("start-game", { roomCode, token, duration: 30 });
-            }}
-          >
-            Begin Round
-          </button>
-        ) : (
-          <p>Waiting for host to start the round…</p>
-        )
-      ) : (
+      {preCountdown !== null && preCountdown >= 0 ? (
+        <div>
+          <h2>
+            Prompt: {prompt}{" "}
+          </h2>
+          <h1 style={{ fontSize: "3rem" }}>{preCountdown}</h1>
+        </div>
+      ) : !started ? (
+      <p>Waiting for round to begin…</p>
+    ) : (
         <>
           <h3>⏳ Time left: {timer} seconds</h3>
           <section className="screen">
@@ -214,9 +225,6 @@ useEffect(() => {
               {prompt && (
                 <h2>
                   Prompt: {prompt}{" "}
-                  {category && (
-                    <span style={{ fontStyle: "italic" }}>({category})</span>
-                  )}
                 </h2>
               )}
               <canvas
