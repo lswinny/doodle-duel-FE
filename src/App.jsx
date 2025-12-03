@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useNavigate } from "react-router-dom";
 
 import socket from "./socket";
 
@@ -10,6 +10,7 @@ import RoomPage from "./Components/RoomPage";
 import ResultsPage from "./Components/ResultsPage";
 
 function App() {
+  const navigate = useNavigate();
   const [nickname, setNickname] = useState("");
 
   const [token, setToken] = useState(() => {
@@ -20,6 +21,12 @@ function App() {
   const [rooms, setRooms] = useState([]);
 
   useEffect(() => {
+    function handleNavigate({ page, roomCode }) {
+      // Build path dynamically
+      if (roomCode) navigate(`/${page}/${roomCode}`);
+      else navigate(`/${page}`);
+    }
+
     socket.on("connect", () => {
       console.log("Socket connected:", socket.id);
     });
@@ -41,12 +48,15 @@ function App() {
       localStorage.setItem("authToken", receivedToken);
     });
 
+    socket.on("navigate", handleNavigate);
+
     return () => {
       socket.off("connect");
       socket.off("disconnect");
       socket.off("token");
+      socket.off("navigate", handleNavigate);
     };
-  }, []);
+  }, [navigate]);
 
   return (
     <main className="app">
@@ -89,7 +99,7 @@ function App() {
           element={<Canvas nickname={nickname} token={token} />}
         />
         <Route
-          path="/results"
+          path="/results/:roomCode"
           element={<ResultsPage nickname={nickname} token={token} />}
         />
       </Routes>

@@ -207,8 +207,7 @@ useEffect(() => {
           <h3>⏳ Time left: {timer} seconds</h3>
           <section className="screen">
             <header className="screen__header">
-              <h1 className="screen__title">Canvas</h1>
-              {roomCode && <p>Room: {roomCode}</p>}
+              <h1 className="screen__title">Doodle Duel!</h1>
             </header>
 
             <div className="screen__body">
@@ -234,18 +233,20 @@ useEffect(() => {
               />
 
               <div style={{ marginTop: "1rem" }}>
-                <button
-                  type="button"
-                  onClick={handleSubmitDrawing}
-                  disabled={isSubmitting}
-                  className="primary-button"
-                >
+                <button type="button" onClick={handleSubmitDrawing} disabled={isSubmitting} className="primary-button">
                   {isSubmitting ? "Sending drawing..." : "Submit drawing"}
                 </button>
 
-                {error && (
-                  <p style={{ color: "red", marginTop: "0.5rem" }}>{error}</p>
-                )}
+                {/* DEBUG NAVIGATION */}
+                <button
+                  onClick={() => navigate(`/results/${roomCode}`)}
+                  className="primary-button"
+                  style={{ marginLeft: "1rem" }}
+                >
+                  Go to Results (debug)
+                </button>
+
+                {error && <p style={{ color: "red", marginTop: "0.5rem" }}>{error}</p>}
               </div>
             </div>
           </section>

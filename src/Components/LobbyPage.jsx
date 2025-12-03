@@ -49,11 +49,12 @@ export default function LobbyPage({ nickname, token, rooms, setRooms }) {
   return (
     <section className="screen">
       <header className="screen__header">
-        <h1 className="screen__title">Lobby</h1>
+        <h1 className="screen__title">Doodle Duel!</h1>
       </header>
 
       <div className="screen__body">
-        <p>Hi {nickname || "Player"}! Lobby coming soon…</p>
+        <p>Hi {nickname || "Player"}! Welcome to the Lobby!</p>
+        <p>Please create or join a room!</p>
 
         <button className="primary-button" onClick={handleCreateRoom}>
           Create room
