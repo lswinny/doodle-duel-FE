@@ -11,6 +11,7 @@ function Canvas({ nickname, token }) {
 
   const [room, setRoom] = useState(location.state?.room || null);
   const [mySocketId, setMySocketId] = useState(null);
+  const [preCountdown, setPreCountdown] = useState(null);
   const [prompt, setPrompt] = useState("");
   const [category, setCategory] = useState("");
   const [drawing, setDrawing] = useState(false);
@@ -20,12 +21,12 @@ function Canvas({ nickname, token }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
 
-useEffect(() => {
-  if (socket.connected) setMySocketId(socket.id);
-  const onConnect = () => setMySocketId(socket.id);
-  socket.on("connect", onConnect);
-  return () => socket.off("connect", onConnect);
-}, []);
+  useEffect(() => {
+    if (socket.connected) setMySocketId(socket.id);
+    const onConnect = () => setMySocketId(socket.id);
+    socket.on("connect", onConnect);
+    return () => socket.off("connect", onConnect);
+  }, []);
 
   useEffect(() => {
     if (room) return;
@@ -42,6 +43,16 @@ useEffect(() => {
     socket.on("room:data", handleRoomData);
     return () => socket.off("room:data", handleRoomData);
   }, [roomCode, navigate]);
+
+  useEffect(() => {
+    function handlePreCountdown({ count, prompt, category }) {
+      setPrompt(prompt);
+      setCategory(category);
+      setPreCountdown(count);
+    }
+    socket.on("round:precountdown", handlePreCountdown);
+    return () => socket.off("round:precountdown", handlePreCountdown);
+  }, []);
 
   useEffect(() => {
     if (!started || !canvasRef.current) return;
@@ -62,6 +73,7 @@ useEffect(() => {
       setTimer(duration);
       setPrompt(prompt);
       setCategory(category);
+      setPreCountdown(null);
     }
     function handleCountdown({ timeLeft }) {
       setTimer(timeLeft);
@@ -173,7 +185,17 @@ useEffect(() => {
 
   return (
     <div>
-      {!started ? (
+      {preCountdown !== null && preCountdown >= 0 ? (
+        <div>
+          <h2>
+            Prompt: {prompt}{" "}
+            {category && (
+              <span style={{ fontStyle: "italic" }}>({category})</span>
+            )}
+          </h2>
+          <h1 style={{ fontSize: "3rem" }}>{preCountdown}</h1>
+        </div>
+      ) : !started ? (
         room.host === mySocketId ? (
           <button
             onClick={() => {
@@ -196,13 +218,13 @@ useEffect(() => {
 
             <div className="screen__body">
               {prompt && (
-              <h2>
-                Prompt: {prompt}{" "}
-                {category && (
-                  <span style={{ fontStyle: "italic" }}>({category})</span>
-                )}
-              </h2>
-            )}
+                <h2>
+                  Prompt: {prompt}{" "}
+                  {category && (
+                    <span style={{ fontStyle: "italic" }}>({category})</span>
+                  )}
+                </h2>
+              )}
               <canvas
                 ref={canvasRef}
                 style={{
