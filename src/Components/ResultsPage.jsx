@@ -24,7 +24,25 @@ function ResultsPage() {
     return () => socket.off("room:data", handleRoomData);
   }, [roomCode, navigate]);
 
-  console.log(room);
+  useEffect(() => {
+    function handleStart(data){
+      navigate(`/canvas/${roomCode}`, {state: data});
+    }
+
+    socket.on("round:start", handleStart);
+    return () => socket.off("round:start", handleStart);
+  }, [roomCode, navigate]);
+
+  useEffect(() => {
+  function handleRoomClosed() {
+    alert("The host has left. Returning to lobby...");
+    navigate("/lobby");
+  }
+
+  socket.on("roomClosed", handleRoomClosed);
+  return () => socket.off("roomClosed", handleRoomClosed);
+}, [navigate]);
+
 
   if (!room) return <p>Loading results...</p>;
 
@@ -63,10 +81,10 @@ function ResultsPage() {
           })}
         </div>
         <div className="nav-buttons" style={{ marginTop: "2rem", textAlign: "center" }}>
-          <button style={{ marginRight: "1rem" }} onClick={() => navigate("/lobby")}>
+          <button style={{ marginRight: "1rem" }} onClick={() => {socket.emit("quit-room", {roomCode}); navigate("/lobby")}}>
             Quit
           </button>
-          <button style={{ marginLeft: "1rem" }} onClick={() => navigate(`/canvas/${roomCode}`)}>
+          <button style={{ marginLeft: "1rem" }} onClick={() => socket.emit("next-round", { roomCode })}>
             Next Round
           </button>
         </div>
