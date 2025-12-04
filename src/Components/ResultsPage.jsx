@@ -7,6 +7,7 @@ function ResultsPage() {
   const navigate = useNavigate();
 
   const [room, setRoom] = useState(null);
+  const [results, setResults] = useState({});
 
   useEffect(() => {
     socket.emit("get-room-data", { roomCode });
@@ -26,6 +27,7 @@ function ResultsPage() {
 
   useEffect(() => {
     function handleStart(data){
+      setResults({})
       navigate(`/canvas/${roomCode}`, {state: data});
     }
 
@@ -43,6 +45,16 @@ function ResultsPage() {
   return () => socket.off("roomClosed", handleRoomClosed);
 }, [navigate]);
 
+  useEffect(() => {
+    function handleResults(data) {
+      console.log("data: ", data)
+      setResults(data);
+    }
+
+    socket.on('round-results', handleResults);
+    return () => socket.off('round-results', handleResults);
+  },[])
+
 
   if (!room) return <p>Loading results...</p>;
 
@@ -57,18 +69,20 @@ function ResultsPage() {
 
         <div className="results-images">
           {Object.entries(room.players).map(([socketId, player]) => {
-            const score = room.scores?.[socketId] ?? "Pending…"; // AI score here
+            const scoreObj = results.scores?.find(s => s.playerName === player.nickname);
+            const score = scoreObj ? scoreObj.score : "Pending…"; // AI score here
+            const url = scoreObj ? scoreObj.image : "Pending..."
 
             return (
               <div className="results-player" key={socketId}>
                 {/* Drawing image placeholder */}
                 <div className="results-image-placeholder">
-                  {/* For real images later:
+
                 <img
-                  src={room.submissions[socketId]}
+                  src={"data:image/png;base64," + url}
                   style={{ width: "100%", height: "100%", objectFit: "contain" }}
                 />
-                */}
+               
                 </div>
 
                 {/* Player name */}
