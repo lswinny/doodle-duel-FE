@@ -84,32 +84,23 @@ function capitalizeFirstLetter(str) {
   }, []);
 
 
+
 useEffect(() => {
-  if (!started) return;
-
-  if (timer <= 0) {
-    console.log("Timer finished!");
-    return;
+  if (timer > 0) {
+    const countdown = setTimeout(() => setTimer(timer - 1), 1000);
+    return () => clearTimeout(countdown);
+  } else if (timer === 0 && !isSubmitting) {
+    console.log("⏰ Timer finished — auto submitting drawing");
+    handleSubmitDrawing();  
   }
+}, [timer]);
 
-  const timerId = setInterval(() => {
-    setTimer(prev => {
-      if (prev <= 1) {
-        clearInterval(timerId);
-        return 0;
-      }
-      return prev - 1;
-    });
-  }, 1000);
-
-  return () => clearInterval(timerId);
-}, [started, timer]);
 
   if (!room) {
     return <p>Loading room...</p>;
   }
 
-  // ---- Drawing functions ----
+
   function drawLine(x1, y1, x2, y2, color = "black") {
     const ctx = ctxRef.current;
     if (!ctx) return;
@@ -141,7 +132,6 @@ useEffect(() => {
     setPrev({ x, y });
   }
 
-  // Convert canvas → PNG Blob
   function canvasToPngBlob(canvas) {
     console.log("converting");
     return new Promise((resolve, reject) => {
@@ -156,8 +146,11 @@ useEffect(() => {
     });
   }
 
-  // Submit drawing
+
   async function handleSubmitDrawing() {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+
     setError("");
 
     const canvas = canvasRef.current;
@@ -179,10 +172,11 @@ useEffect(() => {
       const formData = new FormData();
       formData.append("image", pngBlob, "drawing.png");
       formData.append("roomCode", roomCode);
+      formData.append("socketId", socket.id); 
       if (token) formData.append("token", token);
       if (nickname) formData.append("nickname", nickname);
 
-      const res = await fetch("http://localhost:3000/api/drawings", {
+      const res = await fetch("http://localhost:3000/upload", {
         method: "POST",
         body: formData,
       });
@@ -194,6 +188,7 @@ useEffect(() => {
 
       const data = await res.json().catch(() => null);
       console.log("Drawing uploaded successfully:", data);
+      navigate(`/results/${roomCode}`);
     } catch (err) {
       console.error(err);
       setError(err.message || "Something went wrong while submitting.");
@@ -240,22 +235,6 @@ useEffect(() => {
                 onMouseMove={handleMouseMove}
               />
 
-              <div style={{ marginTop: "1rem" }}>
-                <button type="button" onClick={handleSubmitDrawing} disabled={isSubmitting} className="primary-button">
-                  {isSubmitting ? "Sending drawing..." : "Submit drawing"}
-                </button>
-
-                {/* DEBUG NAVIGATION */}
-                <button
-                  onClick={() => navigate(`/results/${roomCode}`)}
-                  className="primary-button"
-                  style={{ marginLeft: "1rem" }}
-                >
-                  Go to Results (debug)
-                </button>
-
-                {error && <p style={{ color: "red", marginTop: "0.5rem" }}>{error}</p>}
-              </div>
             </div>
           </section>
         </>
