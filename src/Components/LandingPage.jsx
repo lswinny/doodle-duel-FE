@@ -1,8 +1,20 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import socket from "../socket";
 
 function LandingPage({ nickname, setNickname }) {
   const navigate = useNavigate();
+  const [avatar, setAvatar] = useState(null);
+
+  const avatarModules = import.meta.glob("../Avatars/*.png", {
+    eager: true,
+  });
+  const avatars = Object.values(avatarModules).map((mod) => mod.default);
+
+  useEffect(() => {
+    const randomIndex = Math.floor(Math.random() * avatars.length);
+    setAvatar(avatars[randomIndex]);
+  }, []);
 
   function handleSubmit(event) {
     event.preventDefault();
@@ -12,7 +24,7 @@ function LandingPage({ nickname, setNickname }) {
       return;
     }
 
-    socket.emit("set-nickname", { nickname: trimmedName });
+    socket.emit("set-nickname", { nickname: trimmedName, avatar });
 
     navigate("/lobby");
   }
@@ -28,7 +40,15 @@ function LandingPage({ nickname, setNickname }) {
       </header>
 
       <div className="screen__body">
-        <div className="avatar-circle" aria-hidden="true" />
+        <div className="avatar-circle" aria-hidden="true">
+          {avatar && (
+            <img
+              src={avatar}
+              alt="Random avatar"
+              style={{ width: "150px", height: "150px" }}
+            />
+          )}
+        </div>
 
         <form className="nickname-form" onSubmit={handleSubmit}>
           <label className="nickname-form__label" htmlFor="nickname">

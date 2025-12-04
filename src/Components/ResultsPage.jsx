@@ -30,9 +30,6 @@ function ResultsPage() {
       setResults({})
       navigate(`/canvas/${roomCode}`, {state: data});
     }
-
-    socket.on("round:start", handleStart);
-    return () => socket.off("round:start", handleStart);
   }, [roomCode, navigate]);
 
   useEffect(() => {
@@ -98,9 +95,11 @@ function ResultsPage() {
           <button style={{ marginRight: "1rem" }} onClick={() => {socket.emit("quit-room", {roomCode}); navigate("/lobby")}}>
             Quit
           </button>
-          <button style={{ marginLeft: "1rem" }} onClick={() => socket.emit("next-round", { roomCode })}>
-            Next Round
-          </button>
+<button
+  style={{ marginLeft: "1rem" }} onClick={() => {socket.emit("next-round", { roomCode }); navigate(`/canvas/${roomCode}`)}}
+>
+  Next Round
+</button>
         </div>
       </div>
     </section>
