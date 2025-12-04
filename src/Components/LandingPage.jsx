@@ -2,19 +2,20 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import socket from "../socket";
 
-function LandingPage({ nickname, setNickname }) {
+function LandingPage({ nickname, setNickname, avatar, setAvatar }) {
   const navigate = useNavigate();
-  const [avatar, setAvatar] = useState(null);
 
   const avatarModules = import.meta.glob("../Avatars/*.png", {
     eager: true,
   });
   const avatars = Object.values(avatarModules).map((mod) => mod.default);
 
-  useEffect(() => {
-    const randomIndex = Math.floor(Math.random() * avatars.length);
-    setAvatar(avatars[randomIndex]);
-  }, []);
+useEffect(() => {
+    if (!avatar) {
+      const randomIndex = Math.floor(Math.random() * avatars.length);
+      setAvatar(avatars[randomIndex]);
+    }
+  }, [avatars, avatar, setAvatar]);
 
   function handleSubmit(event) {
     event.preventDefault();
