@@ -9,32 +9,37 @@ function RoomPage({ nickname, token }) {
   const [hostId, setHostId] = useState(null);
 
   useEffect(() => {
-    socket.emit('join-room', {roomCode, nickname, token})
-    socket.on("room:data", (roomInfo) => {
-      setPlayers(roomInfo.players);
-      setHostId(roomInfo.host);
-    });
+  socket.emit('join-room', {roomCode, nickname, token});
 
-    socket.on("roomClosed", ({ roomCode }) => {
-      alert(`Room ${roomCode} closed because the host left.`);
-      navigate("/lobby");
-    });
+  const handleRoomData = (roomInfo) => {
+    setPlayers(roomInfo.players);
+    setHostId(roomInfo.host);
+  };
 
-    socket.on("game-started", ({roomCode, roomData}) => {
-      navigate(`/canvas/${roomCode}`, {state: {room: roomData}})
-    })
+  const handleRoomClosed = ({ roomCode }) => {
+    alert(`Room ${roomCode} closed because the host left.`);
+    navigate("/lobby");
+  };
 
-    return () => {
-      socket.off("room:data");
-      socket.off("roomClosed");
-      socket.off("game-started")
-    };
-  }, []);
+  const handleGameStarted = ({ roomCode, roomData }) => {
+    navigate(`/canvas/${roomCode}`, { state: { room: roomData } });
+  };
+
+  socket.on("room:data", handleRoomData);
+  socket.on("roomClosed", handleRoomClosed);
+  socket.on("game-started", handleGameStarted);
+
+  return () => {
+    socket.off("room:data", handleRoomData);
+    socket.off("roomClosed", handleRoomClosed);
+    socket.off("game-started", handleGameStarted);
+  };
+}, [roomCode, nickname, token, navigate]);
 
   console.log("Room code:", roomCode);
   //console.log("Host ID:", room.host);
 
-  console.log({players})
+  console.log({ players });
   return (
     <section className="screen">
       <header className="screen__header">
@@ -53,19 +58,35 @@ function RoomPage({ nickname, token }) {
           ))}
         </ul>
 
-        <button className="primary-button" onClick={() => socket.emit("start-game", {
-          roomCode, token
-        })}
-          disabled={socket.id !== hostId}>
+        <button
+          className="primary-button"
+          onClick={() =>
+            socket.emit("start-game", {
+              roomCode,
+              token,
+            })
+          }
+          disabled={socket.id !== hostId}
+        >
           Start Game
+        </button>
+
+        <button
+          className="primary-button"
+          style={{ marginTop: "1rem" }}
+          onClick={() => {
+            socket.emit("quit-room", { roomCode });
+            navigate("/lobby");
+          }}
+        >
+          Quit Room
         </button>
 
         {socket.id !== hostId && <p>Waiting for host to start the game...</p>}
 
         {roomCode && (
           <p style={{ marginTop: "1rem" }}>
-            Share this code so other players can join:{" "}
-            <strong>{roomCode}</strong>
+            Share this code so other players can join: <strong>{roomCode}</strong>
           </p>
         )}
       </div>
