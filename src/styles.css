@@ -209,3 +209,93 @@ button:hover {
   transform: translateY(-2px);      /* subtle lift on hover */
   box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }
+
+
+/* ===== Canvas screen layout ===== */
+
+.canvas-layout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 1.5rem;
+  padding-top: 2rem;
+}
+
+/* Timer in the purple header */
+.canvas-timer {
+  margin: 0.5rem 0 0;
+  font-size: 1.1rem;
+  color: #ffffff;
+}
+
+/* Prompt text above the canvas */
+.canvas-prompt {
+  margin: 0 0 1rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.canvas-prompt span {
+  font-weight: 700;
+}
+
+.canvas-countdown {
+  font-size: 4rem;
+  font-weight: 700;
+  margin: 0;
+  color: #7c38aa;
+}
+
+.canvas-waiting {
+  font-size: 1.25rem;
+  color: #444;
+}
+
+/* White "card" that holds the drawing canvas */
+.canvas-card {
+  width: 100%;
+  max-width: 900px;
+  padding: 1.5rem;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Actual HTML canvas */
+.drawing-canvas {
+  display: block;
+  width: 100%;
+  max-width: 800px;
+  /* height is auto to keep aspect ratio;
+     internal resolution is controlled by canvas.width/height in JS */
+  height: auto;
+  background: #ffffff;
+  border: 2px solid #000000;
+  border-radius: 6px;
+}
+
+.error-message {
+  margin-top: 1rem;
+  color: #d32f2f;
+  font-weight: 500;
+}
+
+/* Timer in the purple header */
+.canvas-timer {
+  margin: 0.5rem 0 0;
+  font-size: 1.1rem;
+  color: #ffffff;
+
+  /* override the doodle title font */
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  letter-spacing: 0.05em;
+}
+
+.canvas-timer span {
+  font-variant-numeric: tabular-nums; /* optional, makes digits align nicely */
+}
