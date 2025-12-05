@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import socket from "../socket";
 
-export default function LobbyPage({ nickname, token, rooms, setRooms }) {
+export default function LobbyPage({ nickname, token, rooms, setRooms, avatar }) {
   const navigate = useNavigate();
   const safeRooms = Array.isArray(rooms) ? rooms : [];
 
@@ -11,21 +11,21 @@ export default function LobbyPage({ nickname, token, rooms, setRooms }) {
 
     //socket.emit("lobby:get-rooms");
 
-    function handleRoomsUpdated(data){
+    function handleRoomsUpdated(data) {
       if (!Array.isArray(data)) return;
       setRooms([...new Set(data)]);
     }
 
     function handleRoomCreated(code, data) {
-      console.log(data)
+      console.log(data);
       const newCode = typeof code === "string" ? code : code?.roomCode;
       if (!newCode) {
         console.warn("roomCreated event received without a room code:", code);
         return;
       }
-      setRooms(prev => Array.from(new Set([...prev || [], newCode])));
+      setRooms((prev) => Array.from(new Set([...(prev || []), newCode])));
 
-      navigate(`/room/${code}`, {state: {room: data}});
+      navigate(`/room/${code}`, { state: { room: data } });
     }
 
     socket.on("lobby:rooms-updated", handleRoomsUpdated);
@@ -54,6 +54,15 @@ export default function LobbyPage({ nickname, token, rooms, setRooms }) {
 
       <div className="screen__body">
         <p>Hi {nickname || "Player"}! Welcome to the Lobby!</p>
+        {avatar && (
+          <div className="avatar-circle" aria-hidden="true">
+            <img
+              src={avatar}
+              alt="Your avatar"
+              style={{ width: "150px", height: "150px"}}
+            />
+          </div>
+        )}
         <p>Please create or join a room!</p>
 
         <button className="primary-button" onClick={handleCreateRoom}>
@@ -61,19 +70,21 @@ export default function LobbyPage({ nickname, token, rooms, setRooms }) {
         </button>
 
         {safeRooms.length > 0 && (
-  <div style={{ marginTop: "1rem" }}>
-    <h2>Available Rooms</h2>
-    {rooms.map(code => (
-      <button
-        key={code}
-        className="secondary-button"
-        onClick={() => { navigate(`/room/${code}`)}}
-      >
-        Join room {code}
-      </button>
-    ))}
-  </div>
-)}
+          <div style={{ marginTop: "1rem" }}>
+            <h2>Available Rooms</h2>
+            {rooms.map((code) => (
+              <button
+                key={code}
+                className="secondary-button"
+                onClick={() => {
+                  navigate(`/room/${code}`);
+                }}
+              >
+                Join room {code}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

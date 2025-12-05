@@ -19,6 +19,7 @@ function App() {
 
   const [roomCode, setRoomCode] = useState("");
   const [rooms, setRooms] = useState([]);
+  const [avatar, setAvatar] = useState(null);
 
   useEffect(() => {
     function handleNavigate({ page, roomCode }) {
@@ -67,32 +68,37 @@ function App() {
             <LandingPage
               nickname={nickname}
               setNickname={setNickname}
-
               token={token}
+              avatar={avatar}
+              setAvatar={setAvatar}
             />
           }
         />
         <Route
-        path="/lobby"
-        element={
-          <LobbyPage
-            nickname={nickname}
-            token={token}
-            rooms={rooms}
-            setRooms={setRooms}
-            roomCode={roomCode}
-            setRoomCode={setRoomCode}
-          />
-        }
+          path="/lobby"
+          element={
+            <LobbyPage
+              nickname={nickname}
+              token={token}
+              rooms={rooms}
+              setRooms={setRooms}
+              roomCode={roomCode}
+              setRoomCode={setRoomCode}
+              avatar={avatar}
+              setAvatar={setAvatar}
+            />
+          }
         />
         <Route
-        path="/room/:roomCode"
-        element={
-          <RoomPage
-            nickname={nickname}
-            token={token}
-          />
-        }
+          path="/room/:roomCode"
+          element={
+            <RoomPage
+              nickname={nickname}
+              token={token}
+              avatar={avatar}
+              setAvatar={setAvatar}
+            />
+          }
         />
         <Route
           path="/canvas/:roomCode"
@@ -100,7 +106,7 @@ function App() {
         />
         <Route
           path="/results/:roomCode"
-          element={<ResultsPage nickname={nickname} token={token} />}
+          element={<ResultsPage nickname={nickname} token={token} avatar={avatar} setAvatar={setAvatar} />}
         />
       </Routes>
     </main>
