@@ -26,32 +26,31 @@ function ResultsPage() {
   }, [roomCode, navigate]);
 
   useEffect(() => {
-    function handleStart(data){
-      setResults({})
-      navigate(`/canvas/${roomCode}`, {state: data});
+    function handleStart(data) {
+      setResults({});
+      navigate(`/canvas/${roomCode}`, { state: data });
     }
   }, [roomCode, navigate]);
 
   useEffect(() => {
-  function handleRoomClosed() {
-    alert("The host has left. Returning to lobby...");
-    navigate("/lobby");
-  }
+    function handleRoomClosed() {
+      alert("The host has left. Returning to lobby...");
+      navigate("/lobby");
+    }
 
-  socket.on("roomClosed", handleRoomClosed);
-  return () => socket.off("roomClosed", handleRoomClosed);
-}, [navigate]);
+    socket.on("roomClosed", handleRoomClosed);
+    return () => socket.off("roomClosed", handleRoomClosed);
+  }, [navigate]);
 
   useEffect(() => {
     function handleResults(data) {
-      console.log("data: ", data)
+      console.log("data: ", data);
       setResults(data);
     }
 
-    socket.on('round-results', handleResults);
-    return () => socket.off('round-results', handleResults);
-  },[])
-
+    socket.on("round-results", handleResults);
+    return () => socket.off("round-results", handleResults);
+  }, []);
 
   if (!room) return <p>Loading results...</p>;
 
@@ -62,24 +61,42 @@ function ResultsPage() {
       </header>
 
       <div className="results-container">
-        <h2 style={{ textAlign: "center", marginBottom: "1rem" }}>Round Results</h2>
+        <h2 style={{ textAlign: "center", marginBottom: "1rem" }}>
+          Round Results
+        </h2>
 
         <div className="results-images">
           {Object.entries(room.players).map(([socketId, player]) => {
-            const scoreObj = results.scores?.find(s => s.playerName === player.nickname);
+            const scoreObj = results.scores?.find(
+              (s) => s.playerName === player.nickname
+            );
             const score = scoreObj ? scoreObj.score : "Pending…"; // AI score here
-            const url = scoreObj ? scoreObj.image : "Pending..."
+            const url = scoreObj ? scoreObj.image : "Pending...";
 
             return (
               <div className="results-player" key={socketId}>
+                {/* Avatar */}
+                <div className="results-avatar">
+                  <img
+                    src={player.avatar || "/default-avatar.png"}
+                    alt={`${player.nickname}'s avatar`}
+                    style={{
+                      width: "50px",
+                      height: "50px",
+                      borderRadius: "50%",
+                    }}
+                  />
+                </div>
                 {/* Drawing image placeholder */}
                 <div className="results-image-placeholder">
-
-                <img
-                  src={"data:image/png;base64," + url}
-                  style={{ width: "100%", height: "100%", objectFit: "contain" }}
-                />
-               
+                  <img
+                    src={"data:image/png;base64," + url}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "contain",
+                    }}
+                  />
                 </div>
 
                 {/* Player name */}
@@ -91,15 +108,28 @@ function ResultsPage() {
             );
           })}
         </div>
-        <div className="nav-buttons" style={{ marginTop: "2rem", textAlign: "center" }}>
-          <button style={{ marginRight: "1rem" }} onClick={() => {socket.emit("quit-room", {roomCode}); navigate("/lobby")}}>
+        <div
+          className="nav-buttons"
+          style={{ marginTop: "2rem", textAlign: "center" }}
+        >
+          <button
+            style={{ marginRight: "1rem" }}
+            onClick={() => {
+              socket.emit("quit-room", { roomCode });
+              navigate("/lobby");
+            }}
+          >
             Quit
           </button>
-<button
-  style={{ marginLeft: "1rem" }} onClick={() => {socket.emit("next-round", { roomCode }); navigate(`/canvas/${roomCode}`)}}
->
-  Next Round
-</button>
+          <button
+            style={{ marginLeft: "1rem" }}
+            onClick={() => {
+              socket.emit("next-round", { roomCode });
+              navigate(`/canvas/${roomCode}`);
+            }}
+          >
+            Next Round
+          </button>
         </div>
       </div>
     </section>
