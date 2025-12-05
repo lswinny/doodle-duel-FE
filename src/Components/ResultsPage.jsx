@@ -70,7 +70,7 @@ function ResultsPage() {
             const scoreObj = results.scores?.find(
               (s) => s.playerName === player.nickname
             );
-            const score = scoreObj ? scoreObj.score : "Pending…"; // AI score here
+            const score = scoreObj ? `${Math.round(scoreObj.score)}%` : "Pending…"; // AI score here
             const url = scoreObj ? scoreObj.image : "Pending...";
 
             return (

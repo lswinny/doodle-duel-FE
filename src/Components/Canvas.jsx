@@ -43,13 +43,12 @@ function Canvas({ nickname, token }) {
     return () => socket.off("room:data", handleRoomData);
   }, [roomCode, navigate]);
 
+  function capitalizeFirstLetter(str) {
+    if (!str) return "";
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  }
 
-function capitalizeFirstLetter(str) {
-  if (!str) return "";
-  return str.charAt(0).toUpperCase() + str.slice(1);
-}
-
-    useEffect(() => {
+  useEffect(() => {
     function handlePreCountdown({ count, prompt }) {
       setPrompt(capitalizeFirstLetter(prompt));
       setPreCountdown(count);
@@ -83,23 +82,19 @@ function capitalizeFirstLetter(str) {
     };
   }, []);
 
-
-
-useEffect(() => {
-  if (timer > 0) {
-    const countdown = setTimeout(() => setTimer(timer - 1), 1000);
-    return () => clearTimeout(countdown);
-  } else if (timer === 0 && !isSubmitting) {
-    console.log("⏰ Timer finished — auto submitting drawing");
-    handleSubmitDrawing();  
-  }
-}, [timer]);
-
+  useEffect(() => {
+    if (timer > 0) {
+      const countdown = setTimeout(() => setTimer(timer - 1), 1000);
+      return () => clearTimeout(countdown);
+    } else if (timer === 0 && !isSubmitting) {
+      console.log("⏰ Timer finished — auto submitting drawing");
+      handleSubmitDrawing();
+    }
+  }, [timer]);
 
   if (!room) {
     return <p>Loading room...</p>;
   }
-
 
   function drawLine(x1, y1, x2, y2, color = "black") {
     const ctx = ctxRef.current;
@@ -146,7 +141,6 @@ useEffect(() => {
     });
   }
 
-
   async function handleSubmitDrawing() {
     if (isSubmitting) return;
     setIsSubmitting(true);
@@ -172,7 +166,7 @@ useEffect(() => {
       const formData = new FormData();
       formData.append("image", pngBlob, "drawing.png");
       formData.append("roomCode", roomCode);
-      formData.append("socketId", socket.id); 
+      formData.append("socketId", socket.id);
       if (token) formData.append("token", token);
       if (nickname) formData.append("nickname", nickname);
 
@@ -198,64 +192,56 @@ useEffect(() => {
   }
 
   return (
-    <section className="screen">
+    <div className="game-layout">
+      {/* Header always visible */}
       <header className="screen__header">
-        <h1
-          className="screen__title"
-          data-text="Doodle Duel!"
-        >
+        <h1 className="screen__title" data-text="Doodle Duel!">
           DOODLE DUEL!
         </h1>
-  
-        {/* Timer only once the round has actually started */}
+        {prompt && (
+          <p id="prompt-text">
+            Prompt: <span>{prompt}</span>
+          </p>
+        )}
         {started && preCountdown === null && (
           <p className="canvas-timer">
             ⏳ Time left: <span>{timer}</span> seconds
           </p>
         )}
       </header>
-  
-      <div className="screen__body canvas-layout">
-        {preCountdown !== null && preCountdown >= 0 ? (
-          <>
+
+      {/* Conditional body below header */}
+      {preCountdown !== null && preCountdown >= 0 ? (
+        <section className="screen">
+          <div className="screen__body canvas-layout">
             {prompt && (
               <h2 className="canvas-prompt">
                 Prompt: <span>{prompt}</span>
               </h2>
             )}
             <h1 className="canvas-countdown">{preCountdown}</h1>
-          </>
-        ) : !started ? (
-          <p className="canvas-waiting">
-            Waiting for round to begin…
-          </p>
-        ) : (
-          <>
-            {prompt && (
-              <h2 className="canvas-prompt">
-                Prompt: <span>{prompt}</span>
-              </h2>
-            )}
-  
-            <div className="canvas-card">
-              <canvas
-                ref={canvasRef}
-                className="drawing-canvas"
-                  width={800}
-  height={500}
-                onMouseDown={handleMouseDown}
-                onMouseUp={handleMouseUp}
-                onMouseMove={handleMouseMove}
-              />
-            </div>
-  
-            {error && (
-              <p className="error-message">{error}</p>
-            )}
-          </>
-        )}
-      </div>
-    </section>
+          </div>
+        </section>
+      ) : !started ? (
+        <section className="screen">
+          <div className="screen__body canvas-layout">
+            <p className="canvas-waiting">Waiting for round to begin…</p>
+          </div>
+        </section>
+      ) : (
+        <div className="canvas-wrapper">
+          <canvas
+            ref={canvasRef}
+            className="drawing-canvas"
+            width={800}
+            height={500}
+            onMouseDown={handleMouseDown}
+            onMouseUp={handleMouseUp}
+            onMouseMove={handleMouseMove}
+          />
+        </div>
+      )}
+    </div>
   );
 }
 
