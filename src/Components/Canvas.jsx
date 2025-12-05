@@ -241,6 +241,8 @@ useEffect(() => {
               <canvas
                 ref={canvasRef}
                 className="drawing-canvas"
+                  width={800}
+  height={500}
                 onMouseDown={handleMouseDown}
                 onMouseUp={handleMouseUp}
                 onMouseMove={handleMouseMove}

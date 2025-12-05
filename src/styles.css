@@ -252,27 +252,14 @@ button:hover {
   color: #444;
 }
 
-/* White "card" that holds the drawing canvas */
-.canvas-card {
-  width: 100%;
-  max-width: 900px;
-  padding: 1.5rem;
-  background: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
 /* Actual HTML canvas */
 .drawing-canvas {
   display: block;
-  width: 100%;
+  width: 800px;
+  height: 500px;
   max-width: 800px;
   /* height is auto to keep aspect ratio;
      internal resolution is controlled by canvas.width/height in JS */
-  height: auto;
   background: #ffffff;
   border: 2px solid #000000;
   border-radius: 6px;
