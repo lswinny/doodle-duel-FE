@@ -198,48 +198,62 @@ useEffect(() => {
   }
 
   return (
-    <div>
-      {preCountdown !== null && preCountdown >= 0 ? (
-        <div>
-          <h2>
-            Prompt: {prompt}{" "}
-          </h2>
-          <h1 style={{ fontSize: "3rem" }}>{preCountdown}</h1>
-        </div>
-      ) : !started ? (
-      <p>Waiting for round to begin…</p>
-    ) : (
-        <>
-          <h3>⏳ Time left: {timer} seconds</h3>
-          <section className="screen">
-            <header className="screen__header">
-              <h1 className="screen__title">Doodle Duel!</h1>
-            </header>
-
-            <div className="screen__body">
-              {prompt && (
-                <h2>
-                  Prompt: {prompt}{" "}
-                </h2>
-              )}
+    <section className="screen">
+      <header className="screen__header">
+        <h1
+          className="screen__title"
+          data-text="Doodle Duel!"
+        >
+          DOODLE DUEL!
+        </h1>
+  
+        {/* Timer only once the round has actually started */}
+        {started && preCountdown === null && (
+          <p className="canvas-timer">
+            ⏳ Time left: <span>{timer}</span> seconds
+          </p>
+        )}
+      </header>
+  
+      <div className="screen__body canvas-layout">
+        {preCountdown !== null && preCountdown >= 0 ? (
+          <>
+            {prompt && (
+              <h2 className="canvas-prompt">
+                Prompt: <span>{prompt}</span>
+              </h2>
+            )}
+            <h1 className="canvas-countdown">{preCountdown}</h1>
+          </>
+        ) : !started ? (
+          <p className="canvas-waiting">
+            Waiting for round to begin…
+          </p>
+        ) : (
+          <>
+            {prompt && (
+              <h2 className="canvas-prompt">
+                Prompt: <span>{prompt}</span>
+              </h2>
+            )}
+  
+            <div className="canvas-card">
               <canvas
                 ref={canvasRef}
-                style={{
-                  border: "1px solid black",
-                  background: "white",
-                  width: "800px",
-                  height: "500px",
-                }}
+                className="drawing-canvas"
                 onMouseDown={handleMouseDown}
                 onMouseUp={handleMouseUp}
                 onMouseMove={handleMouseMove}
               />
-
             </div>
-          </section>
-        </>
-      )}
-    </div>
+  
+            {error && (
+              <p className="error-message">{error}</p>
+            )}
+          </>
+        )}
+      </div>
+    </section>
   );
 }
 
